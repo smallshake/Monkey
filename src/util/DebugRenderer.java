@@ -11,6 +11,7 @@ import com.jme3.scene.debug.Arrow;
 import com.jme3.scene.shape.Line;
 import game.Game;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  *
@@ -18,14 +19,17 @@ import java.util.HashMap;
  */
 public class DebugRenderer {
 
-    private static final float POINT_LENGTH = 0.2f;
+    private static final float POINT_LENGTH = 2f;
     private static DebugRenderer instance;
     private HashMap<Integer, Spatial> objects;
+    private LinkedList<Spatial> tempObjects;
     private Node debugNode;
+    private int i;
 
     private DebugRenderer() 
-    {
+    {i=0;
         objects = new HashMap<Integer, Spatial>();
+        tempObjects = new LinkedList<Spatial>();
         debugNode = new Node("Debug node");
         Game.getInstance().getRootNode().attachChild(debugNode);
     }
@@ -37,6 +41,14 @@ public class DebugRenderer {
         return instance;
     }
 
+    public void update()
+    {
+        for(Spatial object : tempObjects)
+            debugNode.detachChild(object);
+
+        tempObjects.clear();
+    }
+    
     public void point(int id, Vector3f pos)
     {
         Spatial point = objects.get(id);
@@ -47,15 +59,16 @@ public class DebugRenderer {
         else
         {
             Node n = new Node("Debug point id " + String.valueOf(id));
-            Geometry x = new Geometry("x", new Line(pos.subtract(POINT_LENGTH, 0, 0), pos.add(POINT_LENGTH, 0, 0)));
-            Geometry y = new Geometry("y", new Line(pos.subtract(0, POINT_LENGTH, 0), pos.add(0, POINT_LENGTH, 0)));
-            Geometry z = new Geometry("z", new Line(pos.subtract(0, 0, POINT_LENGTH), pos.add(0, 0, POINT_LENGTH)));
+            Geometry x = new Geometry("x", new Line(Vector3f.ZERO.subtract(POINT_LENGTH, 0, 0), Vector3f.ZERO.add(POINT_LENGTH, 0, 0)));
+            Geometry y = new Geometry("y", new Line(Vector3f.ZERO.subtract(0, POINT_LENGTH, 0), Vector3f.ZERO.add(0, POINT_LENGTH, 0)));
+            Geometry z = new Geometry("z", new Line(Vector3f.ZERO.subtract(0, 0, POINT_LENGTH), Vector3f.ZERO.add(0, 0, POINT_LENGTH)));
             x.setMaterial(getDebugMaterial());
             y.setMaterial(getDebugMaterial());
             z.setMaterial(getDebugMaterial());
             n.attachChild(x);
             n.attachChild(y);
             n.attachChild(z);
+            n.setLocalTranslation(pos);
             debugNode.attachChild(n);
             objects.put(id, n);
         }
@@ -68,12 +81,20 @@ public class DebugRenderer {
             objects.remove(id);
         }
 
-        Node n = new Node("Debug line id " + id);
-        Geometry line = new Geometry("Line", new Line(Vector3f.ZERO, end.subtract(start)));
-        line.setMaterial(getDebugMaterial());
-        line.setLocalTranslation(start);
+        Spatial line = createDebugLine(start, end, ColorRGBA.White);
         debugNode.attachChild(line);
         objects.put(id, line);
+    }
+
+    public void lineOnce(Vector3f start, Vector3f end, ColorRGBA color)
+    {
+
+       /* Spatial line = createDebugLine(start, end, color);
+        debugNode.attachChild(line);
+        debugNode.updateGeometricState();
+        tempObjects.add(line);*/
+
+        ++i;
     }
 
     public void arrows(int id, Vector3f pos)
@@ -124,4 +145,13 @@ public class DebugRenderer {
     {
         return getDebugMaterial(ColorRGBA.White);
     }
+
+    private Spatial createDebugLine(Vector3f start, Vector3f end, ColorRGBA color)
+    {
+        Geometry line = new Geometry("Debug Line", new Line(Vector3f.ZERO, end.subtract(start)));
+        line.setMaterial(getDebugMaterial(color));
+        line.setLocalTranslation(start);
+        return line;
+    }
+
 }

@@ -2,6 +2,9 @@ package level;
 
 import ai.AIManager;
 import com.jme3.asset.AssetManager;
+import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
+import com.jme3.bullet.nodes.PhysicsNode;
+import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.material.Material;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -21,13 +24,16 @@ import game.Game;
 public class Level
 {
     protected Node rootNode;
+    private Node terrainNode;
     protected Mesh terrain;
+    private PhysicsNode physicsTerrainNode;
     protected Game owner;
     protected AIManager aiMgr;
 
     public Level(Game _owner)
     {
         rootNode = new Node("Level node");
+        
         owner = _owner;
         owner.getRootNode().attachChild(rootNode);
 
@@ -37,11 +43,19 @@ public class Level
 
     public void init()
     {
-        initTerrain();
+        terrainNode = initTerrain();
+        CompoundCollisionShape terrainShape =
+                CollisionShapeFactory.createMeshCompoundShape(terrainNode);
+        physicsTerrainNode = new PhysicsNode(terrainNode, terrainShape, 0);
+        rootNode.attachChild(physicsTerrainNode);
+        Game.getInstance().getBulletAppState()
+                .getPhysicsSpace().add(physicsTerrainNode);
+
     }
 
-    private void initTerrain()
+    private Node initTerrain()
     {
+        Node terNode = new Node("Terrain");
         terrain = new Mesh();
 
         Vector3f[] vertices = {
@@ -156,6 +170,7 @@ public class Level
 
         AssetManager assetManager = owner.getAssetManager();
         TangentBinormalGenerator.generate(terrain);           // for lighting effect
+
         Material mat_lit = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         Texture pond = assetManager.loadTexture("Textures/Terrain/Pond/Pond.png");
         pond.setWrap(Texture.WrapMode.Repeat);
@@ -166,11 +181,8 @@ public class Level
         mat_lit.setFloat("m_Shininess", 10f); // [0,128]
         terGeom.setMaterial(mat_lit);
 
-        //Material mat = new Material(assetManager, "Common/MatDefs/Misc/SolidColor.j3md");
-        //mat.setColor("m_Color", ColorRGBA.LightGray);
-        //terGeom.setMaterial(mat);
-
-        owner.getRootNode().attachChild(terGeom);
+        terNode.attachChild(terGeom);
+        return terNode;
     }
 
     public Node getRootNode()

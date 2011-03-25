@@ -25,9 +25,10 @@ public class AIManager {
         }
     }
 
-    public AIActor createEnemy(Vector3f pos)
+    public AIActor createEnemy(String id, Vector3f pos)
     {
-        AIActor actor = new AIActor();
+        AIActor actor = new AIActor(id);
+        actors.add(actor);
         actor.setLocalTranslation(pos);
         level.getRootNode().attachChild(actor.getNode());
         return actor;

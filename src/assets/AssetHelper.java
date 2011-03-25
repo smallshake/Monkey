@@ -71,7 +71,6 @@ public class AssetHelper {
         Geometry body = new Geometry("Body", c);
 
         body.setMaterial(getLitMaterial(diffuse));
-        body.setLocalTranslation(new Vector3f(0f, 0.75f, 0f));
         float rot[] = {(float)Math.PI/2.0f, 0.0f, 0.0f};
         body.setLocalRotation(new Quaternion(rot));
         actor.attachChild(body);
